@@ -5,16 +5,22 @@ from multiprocessing import Value, Array
 from time import sleep
 from random import random, randint
 
-N = 20	#Cantidad de veces que va a producir cada productor
-K = 5	#Capacidad de los buffers de cada consumidor
+N = 10	#Cantidad de veces que va a producir cada productor
+K = 5	#Capacidad de los buffers de cada consumidor (suponemos que es K>0)
 NPROD = 4	#Numero de productores que vamos a tener
 
-#Definimos la funcion que simulara que los procesos tarden mas tiempo en ejecutarse
+
 def delay(factor = 3):
+	"""
+	Definimos la funcion que simulara que los procesos tarden mas tiempo en ejecutarse
+	"""
 	sleep(random()/factor)
 	
-#Definimos la funcion que hace que cada productor añada un valor dado a su buffer
+
 def add_value(storage, mutex, value):
+	"""
+	Definimos la funcion que hace que cada productor añada un valor dado a su buffer
+	"""
 	mutex.acquire()
 	try:
 		found = False
@@ -29,8 +35,11 @@ def add_value(storage, mutex, value):
 		print(f'{current_process().name} ha almacenado {value} en su buffer: {list(storage)}') #Indicamos el valor guardado y la situacion en la que queda el buffer
 		mutex.release()
 
-#Definimos la funcion con la que merge añade un valor de un productor al almacen general y extrae el valor del buffer del productor
+
 def get_value(storage, almacen, mutex, index):
+	"""
+	Definimos la funcion con la que merge añade un valor de un productor al almacen general y extrae el valor del buffer del productor
+	"""
 	mutex.acquire()
 	try:
 		value = storage[0]	#Añadimos el valor al almacen principal  
@@ -44,8 +53,11 @@ def get_value(storage, almacen, mutex, index):
 	finally:
 		mutex.release()
 
-#Definimos los procesos productores
+
 def producer(storage, non_empty, empty, mutex, lastValue):
+	"""
+	Definimos la funcion de los procesos productores
+	"""
 	for v in range(1, N):
 		print(f'{current_process().name} produciendo')	#Indicamos que el proceso comienza a producir
 		delay(6)
@@ -58,8 +70,11 @@ def producer(storage, non_empty, empty, mutex, lastValue):
 	print(f'{current_process().name} ha acabado')	#Indicamos que el proceso ha terminado
 	non_empty.release()
 		
-#Definimos el proceso consumidor
+
 def consumer(storageLst, almacen, non_emptyLst, emptyLst, mutexLst):
+	"""
+	Definimos la funcion del proceso consumidor
+	"""
 	for i in range(len(storageLst)):	#Ponemos en espera los semaforos de todos los procesos
 		non_emptyLst[i].acquire()
 		
@@ -78,8 +93,11 @@ def consumer(storageLst, almacen, non_emptyLst, emptyLst, mutexLst):
 	for i in range(NPROD):
 		print(f'El buffer del productor {i} queda: {list(storageLst[i])}') #Indicamos como quedan los buffers de cada uno de los productores
 
-#Definimos una función que nos de el menor valor que podemos añadir al buffer general, junto el idndice del productor al que pertenece
+
 def minimo(valLst):
+	"""
+	Definimos una función que nos de el menor valor que podemos añadir al buffer general, junto el indice del productor al que pertenece
+	"""
 	valor = max(valLst)
 	i = valLst.index(valor)
 	for j in range(len(valLst)):
@@ -90,8 +108,11 @@ def minimo(valLst):
 		
 		
 
-#Definimos una funcion que nos avise cuando han terminado todos los productores
+
 def noTerminado(bufferLst):
+	"""
+	Definimos una funcion que nos avise cuando han terminado todos los productores
+	"""
 	b = False
 	for storage in bufferLst:
 		if storage[0] != -1:
@@ -99,6 +120,9 @@ def noTerminado(bufferLst):
 	return b
 	
 def main():
+	"""
+	Definimos la funcion main que ejecuta el programa
+	"""
 
 	storageLst = [Array('i', K) for j in range(NPROD)]	#Esta es la lista con los buffer de cada productor
 	
